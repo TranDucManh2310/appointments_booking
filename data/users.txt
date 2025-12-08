@@ -1,0 +1,3 @@
+admin|admin123|admin|Administrator
+alice|alice123|patient|Alice Nguyen
+doctor1|doc123|doctor|Dr. Hung

@@ -1,0 +1,6 @@
+#ifndef ADMIN_MENU_H
+#define ADMIN_MENU_H
+
+void admin_menu(int sock, const char *username);
+
+#endif
