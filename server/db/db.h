@@ -1,6 +1,6 @@
 #ifndef SERVER_DB_H
 #define SERVER_DB_H
-
+#include <stddef.h>
 // initialize data dir & files
 int db_init(const char *data_dir);
 
@@ -11,6 +11,8 @@ int db_auth_user(const char *data_dir, const char *username, const char *passwor
 // doctors: id|name|specialty
 int db_list_doctors(const char *data_dir, char *outbuf, size_t outsz);
 int db_admin_add_doctor(const char *data_dir, const char *name, const char *specialty, char *out, size_t outsz);
+int db_link_doctor_user(const char *data_dir, int doctorId, const char *username);
+int db_get_doctor_id_for_user(const char *data_dir, const char *username, int *doctorIdOut);
 
 // appointments: id|doctorId|date|time|username|status
 int db_book_appointment(const char *data_dir, const char *username, int doctorId, const char *date, const char *time, char *out, size_t outsz);
@@ -18,7 +20,7 @@ int db_list_slots(const char *data_dir, int doctorId, const char *date, char *ou
 int db_view_user_appts(const char *data_dir, const char *username, char *out, size_t outsz);
 int db_cancel_appointment(const char *data_dir, const char *username, int apptId, char *out, size_t outsz);
 int db_doctor_view_bookings(const char *data_dir, int doctorId, const char *date, char *out, size_t outsz);
-int db_doctor_update_status(const char *data_dir, int apptId, const char *status, char *out, size_t outsz);
+int db_doctor_update_status(const char *data_dir, int apptId, int doctorId, const char *status, char *out, size_t outsz);
 
 int db_admin_list_users(const char *data_dir, char *out, size_t outsz);
 int db_admin_list_bookings(const char *data_dir, char *out, size_t outsz);

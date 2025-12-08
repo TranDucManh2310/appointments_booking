@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "../../shared/constants.h"
 
 void handle_patient(int client_sock, const char *cmdline, const char *data_dir, char *session_user, char *session_role) {
     // cmdline is like COMMAND|arg1|arg2|...
@@ -15,6 +16,8 @@ void handle_patient(int client_sock, const char *cmdline, const char *data_dir, 
     if (n == 0) { send_line(client_sock, "ERR|BAD_REQ"); return; }
     if (strcmp(tokens[0], "REGISTER") == 0) {
         if (n < 5) { send_line(client_sock, "ERR|USAGE|REGISTER|username|password|role|full_name"); return; }
+        // Chỉ cho phép tự đăng ký tài khoản bệnh nhân
+        if (strcmp(tokens[3], "patient") != 0) { send_line(client_sock, "ERR|ROLE_NOT_ALLOWED"); return; }
         int r = db_register_user(data_dir, tokens[1], tokens[2], tokens[3], tokens[4]);
         if (r == -2) send_line(client_sock, "ERR|USER_EXISTS");
         else if (r == 0) send_line(client_sock, "OK|REGISTERED");
@@ -48,7 +51,7 @@ void handle_patient(int client_sock, const char *cmdline, const char *data_dir, 
         if (n < 4) { send_line(client_sock, "ERR|USAGE|BOOK|doctorId|date|time"); return; }
         if (session_user[0] == '\0') { send_line(client_sock,"ERR|NOT_LOGGED_IN"); return; }
         char out[256]; int did = atoi(tokens[1]);
-        int r = db_book_appointment(data_dir, session_user, did, tokens[2], tokens[3], out, sizeof(out));
+        db_book_appointment(data_dir, session_user, did, tokens[2], tokens[3], out, sizeof(out));
         send_line(client_sock, out);
     } else if (strcmp(tokens[0], "VIEW_MY_APPTS") == 0) {
         if (session_user[0]=='\0') { send_line(client_sock,"ERR|NOT_LOGGED_IN"); return; }
@@ -60,9 +63,10 @@ void handle_patient(int client_sock, const char *cmdline, const char *data_dir, 
     } else if (strcmp(tokens[0], "CANCEL") == 0) {
         if (n < 2) { send_line(client_sock, "ERR|USAGE|CANCEL|appointmentId"); return; }
         if (session_user[0]=='\0') { send_line(client_sock,"ERR|NOT_LOGGED_IN"); return; }
+        if (strcmp(session_role, "patient") != 0) { send_line(client_sock,"ERR|PERMISSION_DENIED"); return; }
         int apid = atoi(tokens[1]);
         char out[256];
-        int r = db_cancel_appointment(data_dir, session_user, apid, out, sizeof(out));
+        db_cancel_appointment(data_dir, session_user, apid, out, sizeof(out));
         send_line(client_sock, out);
     } else {
         send_line(client_sock, "ERR|UNKNOWN_CMD");

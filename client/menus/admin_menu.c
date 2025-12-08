@@ -2,20 +2,23 @@
 #include "../../shared/socket.h"
 #include <stdio.h>
 #include <string.h>
+#include "../../shared/constants.h"
 
 void admin_menu(int sock, const char *username) {
     int choice; char buf[MAX_LINE];
     while (1) {
         printf("\n=== ADMIN MENU ===\n");
-        printf("1. Add doctor\n2. List users\n3. List doctors\n4. List all bookings\n5. Delete user\n0. Back\nChoice: ");
+        printf("1. Add doctor account\n2. List users\n3. List doctors\n4. List all bookings\n5. Delete user\n0. Back\nChoice: ");
         if (scanf("%d",&choice)!=1) { while(getchar()!='\n'); continue; }
         getchar();
         if (choice==0) break;
         if (choice==1) {
-            char name[128], spec[128];
-            printf("Doctor name: "); fgets(name,sizeof(name),stdin); name[strcspn(name,"\n")] = 0;
+            char user[64], pass[64], name[128], spec[128];
+            printf("Doctor username: "); scanf("%63s", user); getchar();
+            printf("Password: "); scanf("%63s", pass); getchar();
+            printf("Full name: "); fgets(name,sizeof(name),stdin); name[strcspn(name,"\n")] = 0;
             printf("Specialty: "); fgets(spec,sizeof(spec),stdin); spec[strcspn(spec,"\n")] = 0;
-            char cmd[512]; snprintf(cmd,sizeof(cmd),"ADMIN_ADD_DOCTOR|%s|%s", name, spec);
+            char cmd[512]; snprintf(cmd,sizeof(cmd),"ADMIN_ADD_DOCTOR_ACCOUNT|%s|%s|%s|%s", user, pass, name, spec);
             send_line(sock, cmd);
             if (recv_line(sock, buf, sizeof(buf)) <= 0) return;
             printf("[SERVER] %s\n", buf);

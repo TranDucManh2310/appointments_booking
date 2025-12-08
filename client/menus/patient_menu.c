@@ -2,6 +2,7 @@
 #include "../../shared/socket.h"
 #include <stdio.h>
 #include <string.h>
+#include "../../shared/constants.h"
 
 void patient_menu(int sock, const char *username) {
     int choice;

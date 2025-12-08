@@ -1,8 +1,6 @@
 #ifndef SHARED_SOCKET_H
 #define SHARED_SOCKET_H
-
 #include <sys/types.h>
-
 // server side
 int create_server_socket(int port);
 

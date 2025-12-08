@@ -6,6 +6,7 @@
 #include "menus/patient_menu.h"
 #include "menus/doctor_menu.h"
 #include "menus/admin_menu.h"
+#include <unistd.h>
 
 int main(int argc, char *argv[]) {
     if (argc < 3) { printf("Usage: %s <server_ip> <server_port>\n", argv[0]); return 1; }
@@ -25,12 +26,11 @@ int main(int argc, char *argv[]) {
         int c; if (scanf("%d",&c)!=1) { while(getchar()!='\n'); continue; } getchar();
         if (c == 3) { send_line(sock, "QUIT"); break; }
         if (c == 1) {
-            char u[64], p[64], r[16], name[128];
+            char u[64], p[64], name[128];
             printf("Username: "); scanf("%63s", u); getchar();
             printf("Password: "); scanf("%63s", p); getchar();
-            printf("Role (patient/doctor/admin): "); scanf("%15s", r); getchar();
             printf("Full name (no pipe char): "); fgets(name,sizeof(name),stdin); name[strcspn(name,"\n")] = 0;
-            char cmd[512]; snprintf(cmd,sizeof(cmd),"REGISTER|%s|%s|%s|%s", u,p,r,name);
+            char cmd[512]; snprintf(cmd,sizeof(cmd),"REGISTER|%s|%s|%s|%s", u,p,"patient",name);
             send_line(sock, cmd);
             if (recv_line(sock, buf, sizeof(buf)) <= 0) break;
             printf("[SERVER] %s\n", buf);

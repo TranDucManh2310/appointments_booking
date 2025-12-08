@@ -2,6 +2,7 @@
 #include "../../shared/socket.h"
 #include <stdio.h>
 #include <string.h>
+#include "../../shared/constants.h"
 
 void doctor_menu(int sock, const char *username) {
     int choice;
@@ -13,10 +14,7 @@ void doctor_menu(int sock, const char *username) {
         getchar();
         if (choice==0) break;
         if (choice==1) {
-            int did; char date[32];
-            printf("Doctor ID: "); scanf("%d",&did); getchar();
-            printf("Date (YYYY-MM-DD): "); scanf("%31s", date); getchar();
-            char cmd[128]; snprintf(cmd,sizeof(cmd),"DOCTOR_VIEW_BOOKINGS|%d|%s", did, date);
+            char cmd[64]; snprintf(cmd,sizeof(cmd),"DOCTOR_VIEW_BOOKINGS");
             send_line(sock, cmd);
             while (1) {
                 if (recv_line(sock, buf, sizeof(buf)) <= 0) return;
@@ -24,13 +22,12 @@ void doctor_menu(int sock, const char *username) {
                 if (strncmp(buf, "OK|BOOKINGS_END",15)==0 || strncmp(buf,"OK|NO_BOOKINGS",14)==0 || strncmp(buf,"ERR|",4)==0) break;
             }
         } else if (choice==2) {
-            int did, slotm; char date[32], start[8], end[8];
-            printf("Doctor ID: "); scanf("%d",&did); getchar();
+            int slotm; char date[32], start[8], end[8];
             printf("Date: "); scanf("%31s", date); getchar();
             printf("Start HH:MM: "); scanf("%7s", start); getchar();
             printf("End HH:MM: "); scanf("%7s", end); getchar();
             printf("Slot minutes: "); scanf("%d", &slotm); getchar();
-            char cmd[256]; snprintf(cmd,sizeof(cmd),"DOCTOR_ADD_SLOT|%d|%s|%s|%s|%d", did, date, start, end, slotm);
+            char cmd[256]; snprintf(cmd,sizeof(cmd),"DOCTOR_ADD_SLOT|%s|%s|%s|%d", date, start, end, slotm);
             send_line(sock, cmd);
             if (recv_line(sock, buf, sizeof(buf)) <=0) return;
             printf("[SERVER] %s\n", buf);

@@ -27,7 +27,7 @@ void *client_thread(void *arg) {
     char session_user[128] = {0};
     char session_role[32] = {0};
 
-    send_line(sock, "OK|WELCOME|Clinic Socket Server");
+    send_line(sock, "OK|WELCOME| Socket Server");
 
     char line[MAX_LINE];
     while (1) {
@@ -51,7 +51,7 @@ void *client_thread(void *arg) {
         else if (strcmp(cmd, "DOCTOR_VIEW_BOOKINGS")==0 || strcmp(cmd,"DOCTOR_ADD_SLOT")==0 || strcmp(cmd,"DOCTOR_UPDATE_STATUS")==0) {
             handle_doctor(sock, line, data_dir, session_user, session_role);
         }
-        else if (strcmp(cmd,"ADMIN_ADD_DOCTOR")==0 || strcmp(cmd,"ADMIN_LIST_USERS")==0 || strcmp(cmd,"ADMIN_LIST_DOCTORS")==0 ||
+        else if (strcmp(cmd,"ADMIN_ADD_DOCTOR_ACCOUNT")==0 || strcmp(cmd,"ADMIN_ADD_DOCTOR")==0 || strcmp(cmd,"ADMIN_LIST_USERS")==0 || strcmp(cmd,"ADMIN_LIST_DOCTORS")==0 ||
                  strcmp(cmd,"ADMIN_LIST_ALL_BOOKINGS")==0 || strcmp(cmd,"ADMIN_DELETE_USER")==0) {
             // allow only admin role for admin commands
             if (strcmp(session_role,"admin")!=0 && strncmp(cmd,"ADMIN_",6)==0) {

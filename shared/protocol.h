@@ -18,12 +18,13 @@
  // CANCEL|appointmentId
 
  // Doctor:
- // DOCTOR_VIEW_BOOKINGS|doctorId|YYYY-MM-DD
- // DOCTOR_ADD_SLOT|doctorId|YYYY-MM-DD|start|end|slot_min
+ // DOCTOR_VIEW_BOOKINGS
+ // DOCTOR_ADD_SLOT|YYYY-MM-DD|start|end|slot_min
  // DOCTOR_UPDATE_STATUS|appointmentId|status
 
  // Admin:
  // ADMIN_ADD_DOCTOR|name|specialty
+ // ADMIN_ADD_DOCTOR_ACCOUNT|username|password|full_name|specialty
  // ADMIN_LIST_USERS
  // ADMIN_LIST_DOCTORS
  // ADMIN_LIST_ALL_BOOKINGS

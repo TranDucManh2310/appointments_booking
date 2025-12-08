@@ -36,6 +36,17 @@ int db_init(const char *data_dir) {
     // appointments
     snprintf(path,sizeof(path),"%s/appointments.txt", data_dir);
     f = fopen(path,"a+"); if (f) fclose(f);
+    // doctor account mappings doctorId|username
+    snprintf(path,sizeof(path),"%s/doctor_accounts.txt", data_dir);
+    f = fopen(path,"a+");
+    if (f) {
+        fseek(f,0,SEEK_END);
+        if (ftell(f) == 0) {
+            // seed sample mapping for bundled doctor1 account if empty
+            fprintf(f,"1|doctor1\n");
+        }
+        fclose(f);
+    }
     return 0;
 }
 
@@ -118,6 +129,42 @@ int db_admin_add_doctor(const char *data_dir, const char *name, const char *spec
     return 0;
 }
 
+// link a doctor id with a username (doctor account)
+int db_link_doctor_user(const char *data_dir, int doctorId, const char *username) {
+    char path[512]; snprintf(path,sizeof(path), "%s/doctor_accounts.txt", data_dir);
+    FILE *f = fopen(path,"r+");
+    if (!f) return -1;
+    lock_file(f);
+    char line[256]; int existingId = 0; char user[128];
+    while (fgets(line,sizeof(line),f)) {
+        if (sscanf(line,"%d|%127[^\n]", &existingId, user) == 2) {
+            if (existingId == doctorId || strcmp(user, username) == 0) {
+                unlock_file(f); fclose(f); return -2; // conflict
+            }
+        }
+    }
+    fprintf(f, "%d|%s\n", doctorId, username);
+    fflush(f);
+    unlock_file(f); fclose(f);
+    return 0;
+}
+
+// get doctor id mapped to username
+int db_get_doctor_id_for_user(const char *data_dir, const char *username, int *doctorIdOut) {
+    if (!username || !doctorIdOut) return -1;
+    char path[512]; snprintf(path,sizeof(path), "%s/doctor_accounts.txt", data_dir);
+    FILE *f = fopen(path,"r");
+    if (!f) return -1;
+    char line[256]; int did = 0; char user[128];
+    while (fgets(line,sizeof(line),f)) {
+        if (sscanf(line,"%d|%127[^\n]", &did, user) == 2) {
+            if (strcmp(user, username) == 0) { *doctorIdOut = did; fclose(f); return 0; }
+        }
+    }
+    fclose(f);
+    return -2; // not found
+}
+
 // appointments operations
 // appointments file format: id|doctorId|date|time|username|status
 int db_book_appointment(const char *data_dir, const char *username, int doctorId, const char *date, const char *time, char *out, size_t outsz) {
@@ -158,8 +205,9 @@ int db_list_slots(const char *data_dir, int doctorId, const char *date, char *ou
     while (fgets(line,sizeof(line),f)) {
         int id, did; char d[32], t[16], u[128], st[32];
         if (sscanf(line,"%d|%d|%31[^|]|%15[^|]|%127[^|]|%31[^\n]", &id,&did,d,t,u,st) >= 5) {
-            if (did == doctorId && strcmp(d,date)==0) {
-                char tmp[128];
+            // Skip cancelled entries so clients see currently occupied slots only
+            if (did == doctorId && strcmp(d,date)==0 && strcmp(st, "CANCELLED") != 0) {
+                char tmp[256];
                 snprintf(tmp,sizeof(tmp), "%s|%s|%s\n", t, u, st);
                 strncat(out, tmp, outsz - strlen(out) - 1);
             }
@@ -243,19 +291,20 @@ int db_doctor_view_bookings(const char *data_dir, int doctorId, const char *date
     return 0;
 }
 
-int db_doctor_update_status(const char *data_dir, int apptId, const char *status, char *out, size_t outsz) {
+int db_doctor_update_status(const char *data_dir, int apptId, int doctorId, const char *status, char *out, size_t outsz) {
     char path[512], tmp[512];
     snprintf(path,sizeof(path),"%s/appointments.txt", data_dir);
     snprintf(tmp,sizeof(tmp), "%s/appointments.tmp", data_dir);
     FILE *f = fopen(path,"r");
     FILE *t = fopen(tmp,"w");
     if (!f || !t) { if (f) fclose(f); if (t) fclose(t); snprintf(out,outsz,"ERR|DB"); return -1; }
-    int found = 0;
+    int found = 0, not_owner = 0;
     char line[512];
     while (fgets(line,sizeof(line),f)) {
         int id, did; char d[32], tim[16], u[128], st[32];
         if (sscanf(line,"%d|%d|%31[^|]|%15[^|]|%127[^|]|%31[^\n]", &id,&did,d,tim,u,st) >= 5) {
             if (id == apptId) {
+                if (did != doctorId) { not_owner = 1; break; }
                 fprintf(t, "%d|%d|%s|%s|%s|%s\n", id, did, d, tim, u, status);
                 found = 1;
             } else {
@@ -266,6 +315,7 @@ int db_doctor_update_status(const char *data_dir, int apptId, const char *status
         }
     }
     fclose(f); fclose(t);
+    if (not_owner) { remove(tmp); snprintf(out,outsz,"ERR|NOT_OWNED"); return -3; }
     if (found) { remove(path); rename(tmp, path); snprintf(out,outsz,"OK|UPDATED|%d", apptId); return 0; }
     else { remove(tmp); snprintf(out,outsz,"ERR|NOT_FOUND"); return -2; }
 }
