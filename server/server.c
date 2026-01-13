@@ -16,17 +16,22 @@
 typedef struct {
     int sock;
     char data_dir[256];
+    char client_ip[64];
+    int client_port;
 } client_ctx_t;
 
 void *client_thread(void *arg) {
     client_ctx_t *ctx = (client_ctx_t*)arg;
     int sock = ctx->sock;
     char data_dir[256]; strncpy(data_dir, ctx->data_dir, sizeof(data_dir)-1);
+    char cip[64]; strncpy(cip, ctx->client_ip, sizeof(cip)-1);
+    int cport = ctx->client_port;
     free(ctx);
 
     char session_user[128] = {0};
     char session_role[32] = {0};
 
+    printf("[CLIENT %s:%d] connected\n", cip, cport);
     send_line(sock, "OK|WELCOME| Socket Server");
 
     char line[MAX_LINE];
@@ -36,6 +41,7 @@ void *client_thread(void *arg) {
         trim_newline(line);
         if (strlen(line) == 0) continue;
 
+        printf("[CLIENT %s:%d] %s\n", cip, cport, line); fflush(stdout);
         // route command by prefix
         char copy[MAX_LINE]; strncpy(copy, line, sizeof(copy));
         char *cmd = strtok(copy, "|");
@@ -69,6 +75,7 @@ void *client_thread(void *arg) {
     }
 
     close(sock);
+    printf("[CLIENT %s:%d] disconnected\n", cip, cport);
     return NULL;
 }
 
@@ -88,6 +95,8 @@ int main(int argc, char *argv[]) {
         client_ctx_t *ctx = malloc(sizeof(client_ctx_t));
         ctx->sock = c;
         strncpy(ctx->data_dir, DATA_DIR, sizeof(ctx->data_dir)-1);
+        strncpy(ctx->client_ip, inet_ntoa(cli.sin_addr), sizeof(ctx->client_ip)-1);
+        ctx->client_port = ntohs(cli.sin_port);
         pthread_t tid;
         pthread_create(&tid, NULL, client_thread, ctx);
         pthread_detach(tid);

@@ -1,6 +1,11 @@
 admin|admin|admin|Administrator
 doctor1|doc123|doctor|Dr. Hung
 tranmanh|Tranmanh|patient|Tran Manh
-doctor2|doc123|doctor|Manhmanh|123|patient|Tran Duc Manh
+doctor2|doc123|doctor|Manh
+manh|123|patient|Tran Duc Manh
 tranmanh2310|123|patient|Manh
 manh123|123|patient|Manh Tran
+Manh|Tran|patient|manh
+manh|1234|patient|Tran Manh
+hi|hi|patient|Tran
+hihi|hihi|patient|hi
