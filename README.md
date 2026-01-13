@@ -19,6 +19,35 @@ Ung dung client/server C dung TCP socket, luu tru tep trong `data/`. Ho tro vai 
    ```
 4) Tu day co the dung `make` va chay binary trong cung terminal MSYS2.
 
+## Bien dich thu cong neu khong co make
+- Linux/WSL/Git Bash:
+  ```
+  gcc -Wall -g -pthread -Ishared -Iserver/db -Iserver/handlers \
+    -o server/server \
+    server/server.c server/db/db.c server/handlers/patient_handler.c \
+    server/handlers/doctor_handler.c server/handlers/admin_handler.c \
+    shared/socket.c shared/protocol.c
+
+  gcc -Wall -g -pthread -Ishared -Iclient/menus \
+    -o client/client \
+    client/client.c client/menus/patient_menu.c client/menus/doctor_menu.c \
+    client/menus/admin_menu.c shared/socket.c shared/protocol.c
+  ```
+- Windows (MinGW-w64 trong MSYS2 MinGW UCRT x64):
+  ```
+  gcc -Wall -g -pthread -Ishared -Iserver/db -Iserver/handlers ^
+    -o server\server.exe ^
+    server\server.c server\db\db.c server\handlers\patient_handler.c ^
+    server\handlers\doctor_handler.c server\handlers\admin_handler.c ^
+    shared\socket.c shared\protocol.c
+
+  gcc -Wall -g -pthread -Ishared -Iclient\menus ^
+    -o client\client.exe ^
+    client\client.c client\menus\patient_menu.c client\menus\doctor_menu.c ^
+    client\menus\admin_menu.c shared\socket.c shared\protocol.c
+  ```
+Sau khi biên dịch thủ công, chạy server/client như phần “Cach chay”.
+
 ## Cau truc nhanh
 - `server/`: ma nguon server da luong doc/ghi file du lieu.
 - `client/`: ung dung console cho benh nhan/bac si/admin.
